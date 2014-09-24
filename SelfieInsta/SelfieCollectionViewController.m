@@ -9,10 +9,15 @@
 #import "SelfieCollectionViewController.h"
 #import "DetailViewController.h"
 #import "APIManager.h"
+#import "IGCell.h"
+#import "IGImageModel.h"
+#import "DetailViewController.h"
 
 @interface SelfieCollectionViewController ()
+@property (weak, nonatomic) IBOutlet UICollectionView *collectionView;
+- (IBAction)clearAction:(id)sender;
 
-@property NSMutableArray *objects;
+@property NSMutableArray *imageList;
 @end
 
 @implementation SelfieCollectionViewController
@@ -21,20 +26,29 @@
     [super awakeFromNib];
 }
 
-- (void) refresh {
-    [[APIManager sharedManager] getSelfiePics:^(NSArray *imageList) {
-        NSLog(@"");
+- (IBAction)clearAction:(id)sender {
+    [self.imageList removeAllObjects];
+    [self refreshWithIndex:0];
+    [self.collectionView reloadData];
+}
+- (void) refreshWithIndex:(NSInteger) startIndex {
+    __weak __typeof(self) weakSelf = self;    
+    [[APIManager sharedManager] getSelfiePics:^(NSMutableArray *imageList) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [weakSelf.imageList addObjectsFromArray:imageList];
+            [weakSelf.collectionView reloadData];
+        });
     } andAPIManagerFailure:^(NSError *error) {
         
-    }];
+    } startIndex:startIndex];
 }
 - (void) viewWillAppear:(BOOL)animated {
-    [self refresh];
+    self.collectionView.bounds = self.view.bounds;
+    [self refreshWithIndex:0];
 }
 - (void)viewDidLoad {
     [super viewDidLoad];
-    // Do any additional setup after loading the view, typically from a nib.
-    self.navigationItem.leftBarButtonItem = self.editButtonItem;
+    self.imageList = [NSMutableArray array];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -46,48 +60,46 @@
 #pragma mark - Segues
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    if ([[segue identifier] isEqualToString:@"showDetail"]) {
-//        NSIndexPath *indexPath = [self.tableView indexPathForSelectedRow];
-//        NSDate *object = self.objects[indexPath.row];
-//        [[segue destinationViewController] setDetailItem:object];
+    if ([[segue identifier] isEqualToString:@"DetailView"]) {
+        DetailViewController *detailView = [segue destinationViewController];
+        NSIndexPath *selectedIndexPath = [self.collectionView indexPathsForSelectedItems][0];
+        detailView.igImageModel = self.imageList[selectedIndexPath.item];
     }
 }
+
+
 
 #pragma mark - Collection
 
-- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
+- (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath
 {
-    return mediaArray.count;
+    if (self.view.frame.size.width > 320) {
+        return CGSizeMake(120, 120);
+    }
+    return CGSizeMake(106, 106);
 }
 
-- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath
+- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
 {
-    IKCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"CPCELL" forIndexPath:indexPath];
-    
-    if (mediaArray.count >= indexPath.row+1) {
-        InstagramMedia *media = mediaArray[indexPath.row];
-        [cell.imageView setImageWithURL:media.thumbnailURL];
+    return self.imageList.count;
+}
+
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
+    IGCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"IGCELL" forIndexPath:indexPath];
+    [cell removePreviousImage];
+    if (self.imageList.count >= indexPath.row+1) {
+        IGImageModel *media = self.imageList[indexPath.row];
+        [cell setIgImageModel:media];
     }
-    else
-        [cell.imageView setImage:nil];
+    if (indexPath.item == [self.imageList count] - 1) {
+        [self refreshWithIndex:indexPath.item];
+    }
     return cell;
-    
 }
 
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath
 {
     [collectionView deselectItemAtIndexPath:indexPath animated:YES];
-    //    InstagramMedia *media = mediaArray[indexPath.row];
-    //    [self testLoadMediaForUser:media.user];
-    
-    if (self.currentPaginationInfo)
-    {
-        //  Paginate on navigating to detail
-        //either
-        //        [self loadMedia];
-        //or
-        //        [self testPaginationRequest:self.currentPaginationInfo];
-    }
 }
 
 @end

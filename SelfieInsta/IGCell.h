@@ -7,7 +7,9 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "IGImageModel.h"
 
 @interface IGCell : UICollectionViewCell
-
+@property (nonatomic, strong) IGImageModel* igImageModel;
+- (void) removePreviousImage;
 @end

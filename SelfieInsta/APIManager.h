@@ -7,12 +7,16 @@
 //
 
 #import <Foundation/Foundation.h>
+#include <UIKit/UIKit.h>
 
-typedef void (^APIManagerCompleted) (NSArray *imageList);
+typedef void (^APIManagerCompleted) (NSMutableArray *imageList);
 typedef void (^APIManagerFailure) (NSError *error);
+typedef void (^ImageDownloadedCallback) (UIImage* image, NSString *imgLink);
 
 @interface APIManager : NSObject
 + (APIManager *)sharedManager;
 - (void) getSelfiePics:(APIManagerCompleted) apiManagerCompleted
-            andAPIManagerFailure:(APIManagerFailure) apiManagerFailure;
+  andAPIManagerFailure:(APIManagerFailure) apiManagerFailure
+            startIndex:(NSInteger) startIndex;
+- (void) getImage:(NSString *) imageLink withCallback:(ImageDownloadedCallback) imageDownloadedBlock;
 @end

@@ -7,8 +7,10 @@
 //
 
 #import "DetailViewController.h"
+#import "APIManager.h"
 
 @interface DetailViewController ()
+@property (strong, nonatomic) IBOutlet UIImageView *imageView;
 
 @end
 
@@ -16,26 +18,16 @@
 
 #pragma mark - Managing the detail item
 
-- (void)setDetailItem:(id)newDetailItem {
-    if (_detailItem != newDetailItem) {
-        _detailItem = newDetailItem;
-            
-        // Update the view.
-        [self configureView];
-    }
-}
-
-- (void)configureView {
-    // Update the user interface for the detail item.
-    if (self.detailItem) {
-        self.detailDescriptionLabel.text = [self.detailItem description];
-    }
-}
-
 - (void)viewDidLoad {
     [super viewDidLoad];
-    // Do any additional setup after loading the view, typically from a nib.
-    [self configureView];
+    __weak __typeof(self) weakSelf = self;
+    [self.imageView setContentMode:UIViewContentModeScaleAspectFit];
+    float width = self.view.frame.size.width;
+    [self.imageView setFrame:CGRectMake((self.view.frame.size.width-width)/2, (self.view.frame.size.height-width)/2, width, width)];
+    [[APIManager sharedManager] getImage:self.igImageModel.standarResolution.imageUrl
+                            withCallback:^(UIImage *image, NSString *imgLink) {
+                                weakSelf.imageView.image = image;
+                            }];
 }
 
 - (void)didReceiveMemoryWarning {

@@ -8,7 +8,7 @@
 
 #import <UIKit/UIKit.h>
 
-@interface SelfieCollectionViewController : UIViewController
+@interface SelfieCollectionViewController : UICollectionViewController <UICollectionViewDataSource, UICollectionViewDelegate>
 
 
 @end
