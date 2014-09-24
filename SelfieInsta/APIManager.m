@@ -7,7 +7,6 @@
 //
 
 #import "APIManager.h"
-#import "AFHTTPRequestOperationManager.h"
 #import "IGImageModel.h"
 
 #define kKeyClientID @"client_id"
